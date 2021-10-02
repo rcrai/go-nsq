@@ -861,6 +861,19 @@ func (r *Consumer) backoff(d time.Duration) {
 	time.AfterFunc(d, r.resume)
 }
 
+func (r *Consumer) StuckDetected() bool {
+	conns := r.conns()
+	if len(conns) == 0 {
+		return false
+	}
+	for i := range conns {
+		if conns[i].StuckDetected() {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *Consumer) resume() {
 	if atomic.LoadInt32(&r.stopFlag) == 1 {
 		atomic.StoreInt64(&r.backoffDuration, 0)
