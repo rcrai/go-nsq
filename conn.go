@@ -79,6 +79,7 @@ type Conn struct {
 	drainReady      chan int
 
 	closeFlag int32
+	stuckFlag int32
 	stopper   sync.Once
 	wg        sync.WaitGroup
 
@@ -637,6 +638,10 @@ exit:
 	c.log(LogLevelInfo, "writeLoop exiting")
 }
 
+func (c *Conn) StuckDetected() bool {
+	return atomic.LoadInt32(&c.stuckFlag) == 1
+}
+
 func (c *Conn) close() {
 	// a "clean" connection close is orchestrated as follows:
 	//
@@ -678,6 +683,7 @@ func (c *Conn) close() {
 func (c *Conn) cleanup() {
 	<-c.drainReady
 	ticker := time.NewTicker(100 * time.Millisecond)
+	initWarning := time.Now()
 	lastWarning := time.Now()
 	// writeLoop has exited, drain any remaining in flight messages
 	for {
@@ -695,6 +701,9 @@ func (c *Conn) cleanup() {
 			if time.Now().Sub(lastWarning) > time.Second {
 				c.log(LogLevelWarning, "draining... waiting for %d messages in flight", msgsInFlight)
 				lastWarning = time.Now()
+			}
+			if time.Now().Sub(initWarning) > 10 * time.Second {
+				atomic.StoreInt32(&c.stuckFlag, 1)
 			}
 			continue
 		}
