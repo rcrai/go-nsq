@@ -699,11 +699,19 @@ func (c *Conn) cleanup() {
 		}
 		if msgsInFlight > 0 {
 			if time.Now().Sub(lastWarning) > time.Second {
-				c.log(LogLevelWarning, "draining... waiting for %d messages in flight", msgsInFlight)
+				c.log(LogLevelWarning, "draining... waiting for %d messages in flight, elapsed %v",
+					msgsInFlight, time.Now().Sub(initWarning))
 				lastWarning = time.Now()
 			}
-			if time.Now().Sub(initWarning) > 10 * time.Second {
+			if time.Now().Sub(initWarning) > 10*time.Second {
+				c.log(LogLevelWarning, "draining... waiting for %d messages in flight, elapsed %v, waited for too long time, "+
+					"OnStuckDetectedFunc calling <D:%v>",
+					msgsInFlight, time.Now().Sub(initWarning),
+					c.config.OnStuckDetectedFunc != nil)
 				atomic.StoreInt32(&c.stuckFlag, 1)
+				if c.config.OnStuckDetectedFunc != nil {
+					c.config.OnStuckDetectedFunc()
+				}
 			}
 			continue
 		}

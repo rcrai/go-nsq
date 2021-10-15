@@ -181,6 +181,9 @@ type Config struct {
 	AuthSecret string `opt:"auth_secret"`
 	// Use AuthSecret as 'Authorization: Bearer {AuthSecret}' on lookupd queries
 	LookupdAuthorization bool `opt:"skip_lookupd_authorization" default:"true"`
+
+	// consumer options: on stuck callback
+	OnStuckDetectedFunc OnStuckDetectedFunc
 }
 
 // NewConfig returns a new default nsq configuration.

@@ -75,6 +75,8 @@ const (
 	resumeFlag
 )
 
+type OnStuckDetectedFunc func()
+
 // Consumer is a high-level type to consume from NSQ.
 //
 // A Consumer instance is supplied a Handler that will be executed
@@ -140,6 +142,8 @@ type Consumer struct {
 	// read from this channel to block until consumer is cleanly stopped
 	StopChan chan int
 	exitChan chan int
+
+	OnStuckDetectedFunc OnStuckDetectedFunc
 }
 
 // NewConsumer creates a new instance of Consumer for the specified topic/channel
@@ -182,6 +186,12 @@ func NewConsumer(topic string, channel string, config *Config) (*Consumer, error
 
 		StopChan: make(chan int),
 		exitChan: make(chan int),
+
+		OnStuckDetectedFunc: nil,
+	}
+
+	if config.OnStuckDetectedFunc != nil {
+		r.OnStuckDetectedFunc = config.OnStuckDetectedFunc
 	}
 
 	// Set default logger for all log levels
