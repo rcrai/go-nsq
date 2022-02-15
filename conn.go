@@ -710,7 +710,7 @@ func (c *Conn) cleanup() {
 					c.config.OnStuckDetectedFunc != nil)
 				atomic.StoreInt32(&c.stuckFlag, 1)
 				if c.config.OnStuckDetectedFunc != nil {
-					c.config.OnStuckDetectedFunc()
+					c.config.OnStuckDetectedFunc(time.Now().Sub(initWarning))
 				}
 			}
 			continue

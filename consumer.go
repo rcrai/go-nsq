@@ -75,7 +75,7 @@ const (
 	resumeFlag
 )
 
-type OnStuckDetectedFunc func()
+type OnStuckDetectedFunc func(elapsed time.Duration)
 
 // Consumer is a high-level type to consume from NSQ.
 //
